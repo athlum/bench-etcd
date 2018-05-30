@@ -1,7 +1,6 @@
 package benchEtcd
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -13,11 +12,7 @@ var Bench = &cobra.Command{
 	Short: "Etcd bench mark tool",
 	Long:  "Etcd bench mark tool",
 	Run: func(cmd *cobra.Command, args []string) {
-		data, err := json.Marshal(config)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("config: %v", string(data))
+		fmt.Printf("config: %v\n", config.JSON())
 		now := time.Now()
 		config.manage.run(config.loop)
 		config.loop.wait()

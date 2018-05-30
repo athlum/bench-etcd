@@ -1,6 +1,7 @@
 package benchEtcd
 
 import (
+	"encoding/json"
 	"sync"
 )
 
@@ -31,6 +32,30 @@ func (l *loop) done() {
 type cfg struct {
 	loop   *loop
 	manage *manage
+}
+
+func (c *cfg) JSON() string {
+	data, err := json.Marshal(&struct {
+		Total       int
+		Clients     int
+		Connections int
+		Endpoints   string
+		KeyPrefix   string
+		KeyNumber   int
+		ValueSize   int
+	}{
+		Total:       c.loop.total,
+		Clients:     c.manage.clients,
+		Connections: c.manage.conns,
+		Endpoints:   c.manage.endpoints,
+		KeyPrefix:   c.manage.keySet.key,
+		KeyNumber:   c.manage.keySet.keys,
+		ValueSize:   c.manage.keySet.valueSize,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
 }
 
 func newCfg() *cfg {

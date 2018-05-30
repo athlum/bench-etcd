@@ -35,8 +35,9 @@ func (k *keySet) keylist() []string {
 }
 
 func (m *manage) run(l *loop) {
+	ch := l.totalC(m.keySet.keylist())
 	for i := 0; i < m.conns; i += 1 {
-		go m.cli(l)
+		go m.cli(l, ch)
 	}
 }
 
@@ -44,7 +45,7 @@ func (m *manage) cluster() []string {
 	return strings.Split(m.endpoints, ",")
 }
 
-func (m *manage) cli(l *loop) {
+func (m *manage) cli(l *loop, ch <-chan string) {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   m.cluster(),
 		DialTimeout: time.Second,
@@ -54,7 +55,6 @@ func (m *manage) cli(l *loop) {
 	}
 	defer cli.Close()
 
-	ch := l.totalC(m.keySet.keylist())
 	for i := 0; i < m.clients; i += 1 {
 		c := client{
 			cli:    cli,
