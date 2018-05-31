@@ -9,6 +9,25 @@ import (
 	"time"
 )
 
+type counter struct {
+	lock  *sync.RWMutex
+	value int
+}
+
+func (c *counter) echo() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.value += 1
+}
+
+func (c *counter) val() int {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	return c.value
+}
+
 type latency struct {
 	lock  *sync.RWMutex
 	value time.Duration
@@ -22,6 +41,7 @@ type manage struct {
 	keySet    *keySet
 	cache     *sync.Map
 	latency   *latency
+	timeout   *counter
 }
 
 type keySet struct {
@@ -101,10 +121,15 @@ func (c *client) run(ch <-chan string, l *loop, m *manage) {
 	for k := range ch {
 		if kk, ok := m.cache.Load(k); ok {
 			kk.(*key).newValueWatch(c.keySet.valueSize, m, func(value string) {
-				ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-				_, err := c.cli.Put(ctx, k, value)
-				if err != nil {
-					panic(err)
+				for {
+					ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+					_, err := c.cli.Put(ctx, k, value)
+					if err != nil {
+						m.timeout.echo()
+						fmt.Println("put failed", err)
+					} else {
+						return
+					}
 				}
 			})
 			l.done()

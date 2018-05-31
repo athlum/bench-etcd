@@ -14,7 +14,7 @@ var Bench = &cobra.Command{
 		fmt.Printf("config: %v\n", config.JSON())
 		config.manage.run(config.loop)
 		config.loop.wait()
-		fmt.Println("avg latency:", config.manage.latency.avg(), "ms")
+		fmt.Println("avg latency:", config.manage.latency.avg(), "ms;", "timeout:", config.manage.timeout.val())
 	},
 }
 

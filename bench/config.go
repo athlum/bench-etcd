@@ -69,6 +69,9 @@ func newCfg() *cfg {
 			latency: &latency{
 				lock: &sync.RWMutex{},
 			},
+			timeout: &counter{
+				lock: &sync.RWMutex{},
+			},
 		},
 	}
 }
