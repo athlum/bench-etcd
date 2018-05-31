@@ -4,16 +4,24 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/satori/go.uuid"
 	"strings"
+	"sync"
 	"time"
 )
+
+type latency struct {
+	lock  *sync.RWMutex
+	value time.Duration
+	count int
+}
 
 type manage struct {
 	conns     int
 	clients   int
 	endpoints string
 	keySet    *keySet
+	cache     *sync.Map
+	latency   *latency
 }
 
 type keySet struct {
@@ -25,17 +33,30 @@ type keySet struct {
 func (k *keySet) keylist() []string {
 	ks := make([]string, k.keys)
 	for i := 0; i < k.keys; i += 1 {
-		u, err := uuid.NewV4()
-		if err != nil {
-			panic(err)
-		}
-		ks[i] = fmt.Sprintf("/%v/%v", k.key, u.String())
+		ks[i] = fmt.Sprintf("/%v/%v", k.key, uuid())
 	}
 	return ks
 }
 
+func (l *latency) submit(d time.Duration) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	l.count += 1
+	l.value += d
+}
+
+func (l *latency) avg() float64 {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	return float64(l.value) / float64(l.count*int(time.Millisecond))
+}
+
 func (m *manage) run(l *loop) {
-	ch := l.totalC(m.keySet.keylist())
+	kl := m.keySet.keylist()
+	m.cacheInit(kl, m.keySet.valueSize, m.ec())
+	ch := l.totalC(kl)
 	for i := 0; i < m.conns; i += 1 {
 		go m.cli(l, ch)
 	}
@@ -45,7 +66,7 @@ func (m *manage) cluster() []string {
 	return strings.Split(m.endpoints, ",")
 }
 
-func (m *manage) cli(l *loop, ch <-chan string) {
+func (m *manage) ec() *clientv3.Client {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   m.cluster(),
 		DialTimeout: time.Second,
@@ -53,6 +74,11 @@ func (m *manage) cli(l *loop, ch <-chan string) {
 	if err != nil {
 		panic(err)
 	}
+	return cli
+}
+
+func (m *manage) cli(l *loop, ch <-chan string) {
+	cli := m.ec()
 	defer cli.Close()
 
 	for i := 0; i < m.clients; i += 1 {
@@ -60,7 +86,7 @@ func (m *manage) cli(l *loop, ch <-chan string) {
 			cli:    cli,
 			keySet: m.keySet,
 		}
-		go c.run(ch, l)
+		go c.run(ch, l, m)
 	}
 	l.wait()
 }
@@ -70,11 +96,15 @@ type client struct {
 	keySet *keySet
 }
 
-func (c *client) run(ch <-chan string, l *loop) {
+func (c *client) run(ch <-chan string, l *loop, m *manage) {
 	for k := range ch {
-		_, err := c.cli.Put(context.Background(), k, strings.Repeat("v", c.keySet.valueSize))
-		if err != nil {
-			panic(err)
+		if kk, ok := m.cache.Load(k); ok {
+			kk.(*key).newValueWatch(c.keySet.valueSize, m, func(value string) {
+				_, err := c.cli.Put(context.Background(), k, strings.Repeat("v", c.keySet.valueSize))
+				if err != nil {
+					panic(err)
+				}
+			})
 		}
 		l.done()
 	}

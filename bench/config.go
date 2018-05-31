@@ -65,6 +65,10 @@ func newCfg() *cfg {
 		},
 		manage: &manage{
 			keySet: &keySet{},
+			cache:  &sync.Map{},
+			latency: &latency{
+				lock: &sync.RWMutex{},
+			},
 		},
 	}
 }

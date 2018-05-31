@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
-	"time"
 )
 
 var Bench = &cobra.Command{
@@ -13,10 +12,8 @@ var Bench = &cobra.Command{
 	Long:  "Etcd bench mark tool",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("config: %v\n", config.JSON())
-		now := time.Now()
 		config.manage.run(config.loop)
-		config.loop.wait()
-		fmt.Println("end", "time:", float64(time.Now().Sub(now).Nanoseconds())/float64(time.Microsecond))
+		fmt.Println("avg latency:", config.manage.latency.avg(), "ms")
 	},
 }
 
