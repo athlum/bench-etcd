@@ -68,6 +68,7 @@ func newCfg() *cfg {
 			cache:  &sync.Map{},
 			latency: &latency{
 				lock: &sync.RWMutex{},
+				m:    make(map[int]int),
 			},
 			timeout: &counter{
 				lock: &sync.RWMutex{},

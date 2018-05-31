@@ -29,9 +29,11 @@ func (c *counter) val() int {
 }
 
 type latency struct {
-	lock  *sync.RWMutex
-	value time.Duration
-	count int
+	lock    *sync.RWMutex
+	value   time.Duration
+	count   int
+	longest time.Duration
+	m       map[int]int
 }
 
 type manage struct {
@@ -64,13 +66,29 @@ func (l *latency) submit(d time.Duration) {
 
 	l.count += 1
 	l.value += d
+	if d > l.longest {
+		l.longest = d
+	}
+	l.m[int(d/time.Second)] += 1
 }
 
-func (l *latency) avg() float64 {
+func (l *latency) avg() time.Duration {
 	l.lock.RLock()
 	defer l.lock.RUnlock()
 
-	return float64(l.value) / float64(l.count*int(time.Millisecond))
+	return time.Duration(int(l.value) / l.count)
+}
+
+func (l *latency) max() time.Duration {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+	return l.longest
+}
+
+func (l *latency) distribution() map[int]int {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+	return l.m
 }
 
 func (m *manage) run(l *loop) {

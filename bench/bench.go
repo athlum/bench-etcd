@@ -14,7 +14,14 @@ var Bench = &cobra.Command{
 		fmt.Printf("config: %v\n", config.JSON())
 		config.manage.run(config.loop)
 		config.loop.wait()
-		fmt.Println("avg latency:", config.manage.latency.avg(), "ms;", "timeout:", config.manage.timeout.val())
+		fmt.Println("timeout:", config.manage.timeout.val())
+		fmt.Println("avg latency:", config.manage.latency.avg())
+		fmt.Println("max latency:", config.manage.latency.max())
+		m := config.manage.latency.distribution()
+		fmt.Println("latency distribution:")
+		for c, v := range m {
+			fmt.Printf("<%vs: %v", c+1, v)
+		}
 	},
 }
 
