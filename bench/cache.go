@@ -13,7 +13,7 @@ func (m *manage) cacheInit(keylist []string, valueSize int, cli *clientv3.Client
 	wg := &sync.WaitGroup{}
 	wg.Add(len(keylist))
 	for _, k := range keylist {
-		go func(wg *sync.WaitGroup) {
+		go func(wg *sync.WaitGroup, k string) {
 			defer wg.Done()
 			kk := &key{
 				lock:    &sync.Mutex{},
@@ -21,7 +21,7 @@ func (m *manage) cacheInit(keylist []string, valueSize int, cli *clientv3.Client
 			}
 			kk.newValue(valueSize, cli)
 			m.cache.Store(k, kk)
-		}(wg)
+		}(wg, k)
 	}
 	wg.Wait()
 	defer cli.Close()
