@@ -16,6 +16,7 @@ func (m *manage) cacheInit(keylist []string, valueSize int, cli *clientv3.Client
 			keyName: k,
 		}
 		kk.newValue(valueSize, cli)
+		m.cache.Store(k, kk)
 	}
 	defer cli.Close()
 }
