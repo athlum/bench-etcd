@@ -82,7 +82,7 @@ func (m *manage) cli(l *loop, ch <-chan string) {
 	cli := m.ec()
 	defer cli.Close()
 
-	for i := 0; i < m.clients; i += 1 {
+	for i := 0; i < m.clients/m.conns; i += 1 {
 		c := client{
 			cli:    cli,
 			keySet: m.keySet,
