@@ -11,8 +11,8 @@ import (
 
 func (m *manage) cacheInit(keylist []string, valueSize int, cli *clientv3.Client) {
 	wg := &sync.WaitGroup{}
+	wg.Add(len(keylist))
 	for _, k := range keylist {
-		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 			kk := &key{
