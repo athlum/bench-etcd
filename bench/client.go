@@ -101,7 +101,7 @@ func (c *client) run(ch <-chan string, l *loop, m *manage) {
 	for k := range ch {
 		if kk, ok := m.cache.Load(k); ok {
 			kk.(*key).newValueWatch(c.keySet.valueSize, m, func(value string) {
-				_, err := c.cli.Put(context.Background(), k, value)
+				_, err := c.cli.Put(context.WithTimeout(context.Background(), 10*time.Second), k, value)
 				if err != nil {
 					panic(err)
 				}
