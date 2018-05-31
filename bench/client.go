@@ -56,6 +56,7 @@ func (l *latency) avg() float64 {
 func (m *manage) run(l *loop) {
 	kl := m.keySet.keylist()
 	m.cacheInit(kl, m.keySet.valueSize, m.ec())
+	fmt.Println("Init Done")
 	ch := l.totalC(kl)
 	for i := 0; i < m.conns; i += 1 {
 		go m.cli(l, ch)
@@ -105,7 +106,9 @@ func (c *client) run(ch <-chan string, l *loop, m *manage) {
 					panic(err)
 				}
 			})
+			l.done()
+		} else {
+			panic(fmt.Sprintf("keyname %v cache not found.", k))
 		}
-		l.done()
 	}
 }
