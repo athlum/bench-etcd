@@ -13,6 +13,7 @@ var Bench = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("config: %v\n", config.JSON())
 		config.manage.run(config.loop)
+		config.loop.wait()
 		fmt.Println("avg latency:", config.manage.latency.avg(), "ms")
 	},
 }

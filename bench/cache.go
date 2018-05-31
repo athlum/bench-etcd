@@ -54,6 +54,7 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 
 	k._newValue(valueSize)
 	wc := cli.Watch(context.Background(), k.keyName)
+	go fn(k.value)
 	for e := range wc {
 		if err := e.Err(); err != nil {
 			panic(err)
@@ -65,6 +66,4 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 			}
 		}
 	}
-
-	go fn(k.value)
 }
