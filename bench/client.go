@@ -70,7 +70,7 @@ func (m *manage) cluster() []string {
 func (m *manage) ec() *clientv3.Client {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   m.cluster(),
-		DialTimeout: time.Second,
+		DialTimeout: time.Second * 10,
 	})
 	if err != nil {
 		panic(err)

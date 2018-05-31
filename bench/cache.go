@@ -10,14 +10,20 @@ import (
 )
 
 func (m *manage) cacheInit(keylist []string, valueSize int, cli *clientv3.Client) {
+	wg := &sync.WaitGroup{}
 	for _, k := range keylist {
-		kk := &key{
-			lock:    &sync.Mutex{},
-			keyName: k,
-		}
-		kk.newValue(valueSize, cli)
-		m.cache.Store(k, kk)
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			kk := &key{
+				lock:    &sync.Mutex{},
+				keyName: k,
+			}
+			kk.newValue(valueSize, cli)
+			m.cache.Store(k, kk)
+		}(wg)
 	}
+	wg.Wait()
 	defer cli.Close()
 }
 
