@@ -15,7 +15,7 @@ type loop struct {
 func (l *loop) totalC(kl []string) <-chan string {
 	c := make(chan string, l.total)
 	for i := 1; i <= l.total; i += 1 {
-		l.wg.Add(i)
+		l.wg.Add(1)
 		c <- kl[(i-1)%len(kl)]
 	}
 	return c
