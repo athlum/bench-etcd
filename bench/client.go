@@ -160,6 +160,7 @@ func (c *client) run(ch <-chan string, l *loop, m *manage) {
 					ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 					_, err := c.cli.Put(ctx, k, value)
 					if err != nil {
+						c.cli = m.ec()
 						m.timeout.echo()
 						fmt.Println("put failed", err)
 					} else {
