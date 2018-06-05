@@ -59,7 +59,7 @@ func (c *cfg) JSON() string {
 }
 
 func newCfg() *cfg {
-	return &cfg{
+	c := &cfg{
 		loop: &loop{
 			wg: &sync.WaitGroup{},
 		},
@@ -78,4 +78,6 @@ func newCfg() *cfg {
 			},
 		},
 	}
+	go c.manage.latency.notice()
+	return c
 }

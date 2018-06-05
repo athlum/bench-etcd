@@ -80,6 +80,22 @@ func (l *latency) avg() time.Duration {
 	return time.Duration(int(l.value) / l.count)
 }
 
+func (l *latency) progress() int {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	return l.count
+}
+
+func (l *latency) notice() {
+	t := time.NewTicker(time.Second * 300)
+	defer t.Stop()
+	for {
+		<-t.C
+		fmt.Println("progress:", l.progress())
+	}
+}
+
 func (l *latency) max() time.Duration {
 	l.lock.RLock()
 	defer l.lock.RUnlock()
