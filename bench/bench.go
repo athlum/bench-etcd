@@ -15,6 +15,7 @@ var Bench = &cobra.Command{
 		config.manage.run(config.loop)
 		config.loop.wait()
 		fmt.Println("timeout:", config.manage.timeout.val())
+		fmt.Println("watch failed:", config.manage.watchFailed.val())
 		fmt.Println("avg latency:", config.manage.latency.avg())
 		fmt.Println("max latency:", config.manage.latency.max())
 		m := config.manage.latency.distribution()

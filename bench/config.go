@@ -73,6 +73,9 @@ func newCfg() *cfg {
 			timeout: &counter{
 				lock: &sync.RWMutex{},
 			},
+			watchFailed: &counter{
+				lock: &sync.RWMutex{},
+			},
 		},
 	}
 }

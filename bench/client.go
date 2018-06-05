@@ -37,13 +37,14 @@ type latency struct {
 }
 
 type manage struct {
-	conns     int
-	clients   int
-	endpoints string
-	keySet    *keySet
-	cache     *sync.Map
-	latency   *latency
-	timeout   *counter
+	conns       int
+	clients     int
+	endpoints   string
+	keySet      *keySet
+	cache       *sync.Map
+	latency     *latency
+	timeout     *counter
+	watchFailed *counter
 }
 
 type keySet struct {

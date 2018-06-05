@@ -63,15 +63,21 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 	wc := cli.Watch(context.Background(), k.keyName)
 	fn(k.value)
 	k.time = time.Now()
-	for e := range wc {
-		if err := e.Err(); err != nil {
-			panic(err)
-		}
-		for _, ev := range e.Events {
-			if k.value == string(ev.Kv.Value) {
-				m.latency.submit(time.Now().Sub(k.time))
-				return
+	for {
+		select {
+		case e := <-wc:
+			if err := e.Err(); err != nil {
+				panic(err)
 			}
+			for _, ev := range e.Events {
+				if k.value == string(ev.Kv.Value) {
+					m.latency.submit(time.Now().Sub(k.time))
+					return
+				}
+			}
+		case <-time.After(time.Second * 60):
+			m.watchFailed.echo()
+			return
 		}
 	}
 }
