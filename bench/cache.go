@@ -64,6 +64,8 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 	wc := cli.Watch(ctx, k.keyName)
 	fn(k.value)
 	k.time = time.Now()
+	t := time.NewTicker(time.Second * 60)
+	defer t.Stop()
 	for {
 		select {
 		case e := <-wc:
@@ -78,7 +80,7 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 					return
 				}
 			}
-		case <-time.After(time.Second * 60):
+		case <-t.C:
 			m.watchFailed.echo()
 			return
 		}
