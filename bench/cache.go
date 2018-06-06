@@ -60,14 +60,17 @@ func (k *key) newValueWatch(valueSize int, m *manage, fn func(string)) {
 	defer cli.Close()
 
 	k._newValue(valueSize)
-	wc := cli.Watch(context.Background(), k.keyName)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*20)
+	wc := cli.Watch(ctx, k.keyName)
 	fn(k.value)
 	k.time = time.Now()
 	for {
 		select {
 		case e := <-wc:
 			if err := e.Err(); err != nil {
-				panic(err)
+				fmt.Println("watch Failed:", err.Error())
+				m.watchFailed.echo()
+				return
 			}
 			for _, ev := range e.Events {
 				if k.value == string(ev.Kv.Value) {
